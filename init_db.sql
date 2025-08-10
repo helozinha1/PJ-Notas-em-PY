@@ -1,0 +1,22 @@
+CREATE TABLE turma (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    descricao TEXT
+);
+
+CREATE TABLE aluno (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    idade INTEGER NOT NULL,
+    turma_id INTEGER,
+    FOREIGN KEY (turma_id) REFERENCES turma (id)
+);
+
+CREATE TABLE projeto (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    nota REAL NOT NULL,
+    aluno_id INTEGER NOT NULL,
+    FOREIGN KEY (aluno_id) REFERENCES aluno (id) ON DELETE CASCADE
+);

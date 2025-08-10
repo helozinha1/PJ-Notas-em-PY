@@ -1,0 +1,131 @@
+<!-- 
+  student_detail.html
+
+  Este template exibe os detalhes de um único aluno, incluindo seus projetos e notas.
+  Também oferece opções para adicionar, editar e remover projetos.
+-->
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Aluno{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Detalhes do Aluno: {{ aluno.nome }}</h2>
+    <a href="{{ url_for('students_list') }}" class="btn btn-secondary">Voltar para a lista</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Informações Pessoais</h5>
+        <p><strong>Nome:</strong> {{ aluno.nome }}</p>
+        <p><strong>Email:</strong> {{ aluno.email }}</p>
+        <p><strong>Idade:</strong> {{ aluno.idade }}</p>
+        <p><strong>Turma:</strong> {% if aluno.turma %}{{ aluno.turma.nome }}{% else %}Nenhuma{% endif %}</p>
+        <p><strong>Média Geral:</strong> {% if media is not none %}{{ '%.2f'|format(media) }}{% else %}-{% endif %}</p>
+    </div>
+</div>
+
+<h3>Projetos</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4></h4>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">
+        Adicionar Projeto
+    </button>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Nome do Projeto</th>
+            <th>Nota</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for projeto in projetos %}
+        <tr>
+            <td>{{ projeto.nome }}</td>
+            <td>{{ '%.2f'|format(projeto.nota) }}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editProjectModal"
+                        data-bs-id="{{ projeto.id }}"
+                        data-bs-nome="{{ projeto.nome }}"
+                        data-bs-nota="{{ projeto.nota }}">
+                    Editar
+                </button>
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('delete_projeto', aluno_id=aluno.id, id=projeto.id) }}" onclick="return confirm('Tem certeza que deseja remover este projeto?')">Remover</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal de Adicionar Projeto -->
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProjectModalLabel">Adicionar Novo Projeto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_projeto', aluno_id=aluno.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome do Projeto</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota" class="form-label">Nota</label>
+                        <input type="number" class="form-control" id="nota" name="nota" step="0.01" min="0" max="10" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Projeto -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProjectModalLabel">Editar Projeto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProjectForm" method="post">
+                    <div class="mb-3">
+                        <label for="edit_nome_projeto" class="form-label">Nome do Projeto</label>
+                        <input type="text" class="form-control" id="edit_nome_projeto" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_nota" class="form-label">Nota</label>
+                        <input type="number" class="form-control" id="edit_nota" name="nota" step="0.01" min="0" max="10" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var editProjectModal = document.getElementById('editProjectModal');
+    editProjectModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var projetoId = button.getAttribute('data-bs-id');
+        var projetoNome = button.getAttribute('data-bs-nome');
+        var projetoNota = button.getAttribute('data-bs-nota');
+        
+        var modalTitle = editProjectModal.querySelector('.modal-title');
+        modalTitle.textContent = 'Editar Projeto: ' + projetoNome;
+        
+        var form = document.getElementById('editProjectForm');
+        form.action = '/student_detail/{{ aluno.id }}/edit_projeto/' + projetoId;
+        
+        document.getElementById('edit_nome_projeto').value = projetoNome;
+        document.getElementById('edit_nota').value = projetoNota;
+    });
+</script>
+{% endblock %}

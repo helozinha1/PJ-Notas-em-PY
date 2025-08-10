@@ -1,0 +1,166 @@
+<!-- 
+  turmas.html
+
+  Este template exibe a lista de turmas de forma responsiva.
+  Em telas grandes, exibe uma tabela tradicional.
+  Em telas pequenas, exibe a lista como cartões para melhor usabilidade.
+-->
+{% extends 'base.html' %}
+
+{% block title %}Turmas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Lista de Turmas</h2>
+    <!-- Botão Adicionar Turma com degradê verde -->
+    <button type="button" class="btn btn-gradient-success" data-bs-toggle="modal" data-bs-target="#addTurmaModal">
+        <i class="fas fa-plus me-1"></i> Adicionar Turma
+    </button>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Tabela para telas grandes (maiores que md) -->
+<div class="d-none d-md-block">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Alunos</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turma in turmas %}
+            <tr>
+                <td>{{ turma['nome'] }}</td>
+                <td>{{ turma['descricao'] }}</td>
+                <td>{{ turma['num_alunos'] }}</td>
+                <td>
+                    <!-- Botão Editar com degradê laranja -->
+                    <button type="button" class="btn btn-sm btn-gradient-warning me-2" data-bs-toggle="modal" data-bs-target="#editTurmaModal"
+                            data-bs-id="{{ turma['id'] }}"
+                            data-bs-nome="{{ turma['nome'] }}"
+                            data-bs-descricao="{{ turma['descricao'] }}">
+                        <i class="fas fa-edit me-1"></i> Editar
+                    </button>
+                    <!-- Botão Remover com degradê vermelho -->
+                    <a class="btn btn-sm btn-gradient-danger" href="{{ url_for('delete_turma', id=turma['id']) }}" onclick="return confirm('Tem certeza que deseja remover esta turma? Os alunos serão desassociados, mas não serão excluídos.')">
+                        <i class="fas fa-trash-alt me-1"></i> Remover
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Cards para telas pequenas (até md) -->
+<div class="d-md-none">
+    {% for turma in turmas %}
+    <div class="card mb-3 card-bg">
+        <div class="card-body">
+            <h5 class="card-title">{{ turma['nome'] }}</h5>
+            <p class="card-text mb-1"><strong>Descrição:</strong> {{ turma['descricao'] }}</p>
+            <p class="card-text mb-3"><strong>Alunos:</strong> {{ turma['num_alunos'] }}</p>
+            <div class="d-flex justify-content-between mt-3">
+                <!-- Botão Editar com degradê laranja -->
+                <button type="button" class="btn btn-sm btn-gradient-warning" data-bs-toggle="modal" data-bs-target="#editTurmaModal"
+                        data-bs-id="{{ turma['id'] }}"
+                        data-bs-nome="{{ turma['nome'] }}"
+                        data-bs-descricao="{{ turma['descricao'] }}">
+                    <i class="fas fa-edit me-1"></i> Editar
+                </button>
+                <!-- Botão Remover com degradê vermelho -->
+                <a class="btn btn-sm btn-gradient-danger" href="{{ url_for('delete_turma', id=turma['id']) }}" onclick="return confirm('Tem certeza que deseja remover esta turma? Os alunos serão desassociados, mas não serão excluídos.')">
+                    <i class="fas fa-trash-alt me-1"></i> Remover
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal de Adicionar Turma -->
+<div class="modal fade" id="addTurmaModal" tabindex="-1" aria-labelledby="addTurmaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTurmaModalLabel">Adicionar Nova Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_turma') }}" method="post">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Turma</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <!-- Botão de submissão com degradê azul -->
+                    <button type="submit" class="btn btn-gradient-primary">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Turma -->
+<div class="modal fade" id="editTurmaModal" tabindex="-1" aria-labelledby="editTurmaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTurmaModalLabel">Editar Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTurmaForm" method="post">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label">Nome da Turma</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <!-- Botão de submissão com degradê azul -->
+                    <button type="submit" class="btn btn-gradient-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para preencher os dados da turma no modal de edição
+    var editTurmaModal = document.getElementById('editTurmaModal');
+    editTurmaModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var turmaId = button.getAttribute('data-bs-id');
+        var turmaNome = button.getAttribute('data-bs-nome');
+        var turmaDescricao = button.getAttribute('data-bs-descricao');
+        
+        var form = document.getElementById('editTurmaForm');
+        form.action = '/turma/edit/' + turmaId;
+        
+        document.getElementById('edit_nome').value = turmaNome;
+        document.getElementById('edit_descricao').value = turmaDescricao;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+<!-- 
+  student_detail.html
+
+  Exibe os detalhes de um aluno e seus projetos, com um design de cartões
+  profissional em preto e branco com degradês.
+-->
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Aluno{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h2 class="text-3xl font-semibold text-white">Detalhes do Aluno: {{ aluno.nome }}</h2>
+    <a href="{{ url_for('students_list') }}" class="mt-4 md:mt-0 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300">
+        <i class="fas fa-arrow-left mr-2"></i> Voltar
+    </a>
+</div>
+
+<!-- Card de Informações Pessoais -->
+<div class="card-bg rounded-lg shadow-xl p-6 mb-8 border border-gray-700">
+    <h5 class="text-xl font-bold text-white mb-4">Informações Pessoais</h5>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-400">
+        <p><strong>Nome:</strong> {{ aluno.nome }}</p>
+        <p><strong>Email:</strong> {{ aluno.email }}</p>
+        <p><strong>Idade:</strong> {{ aluno.idade }}</p>
+        <p><strong>Turma:</strong> {% if aluno.turma %}{{ aluno.turma.nome }}{% else %}Nenhuma{% endif %}</p>
+        <p><strong>Média Geral:</strong> {% if media is not none %}{{ '%.2f'|format(media) }}{% else %}-{% endif %}</p>
+    </div>
+</div>
+
+<!-- Seção de Projetos -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h4 class="text-2xl font-semibold text-white">Projetos e Notas</h4>
+    <button type="button" class="mt-4 md:mt-0 btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300" data-bs-toggle="modal" data-bs-target="#addProjectModal">
+        <i class="fas fa-plus mr-2"></i> Adicionar Projeto
+    </button>
+</div>
+
+<!-- Listagem de Projetos em Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for projeto in projetos %}
+    <div class="card-bg rounded-lg shadow-xl p-6 hover:shadow-2xl transition-shadow duration-300 border border-gray-700">
+        <h5 class="text-lg font-bold text-white mb-2">{{ projeto.nome }}</h5>
+        <p class="text-gray-400 mb-4"><strong>Nota:</strong> {{ '%.2f'|format(projeto.nota) }}</p>
+        <div class="flex space-x-2">
+            <button type="button" class="flex-1 text-center bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300" data-bs-toggle="modal" data-bs-target="#editProjectModal"
+                    data-bs-id="{{ projeto.id }}"
+                    data-bs-nome="{{ projeto.nome }}"
+                    data-bs-nota="{{ projeto.nota }}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <a class="flex-1 text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300" href="{{ url_for('delete_projeto', aluno_id=aluno.id, id=projeto.id) }}" onclick="return confirm('Tem certeza que deseja remover este projeto?')">
+                <i class="fas fa-trash-alt"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal de Adicionar Projeto -->
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-lg shadow-xl border border-gray-700">
+            <div class="modal-header bg-gray-900 px-6 py-4 rounded-t-lg">
+                <h5 class="modal-title text-xl font-bold" id="addProjectModalLabel">Adicionar Novo Projeto</h5>
+                <button type="button" class="btn-close text-white opacity-70 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form action="{{ url_for('add_projeto', aluno_id=aluno.id) }}" method="post" class="space-y-4">
+                    <div>
+                        <label for="nome" class="block text-gray-400 font-medium mb-1">Nome do Projeto</label>
+                        <input type="text" class="w-full p-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500" id="nome" name="nome" required>
+                    </div>
+                    <div>
+                        <label for="nota" class="block text-gray-400 font-medium mb-1">Nota</label>
+                        <input type="number" class="w-full p-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500" id="nota" name="nota" step="0.01" min="0" max="10" required>
+                    </div>
+                    <button type="submit" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Projeto -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-lg shadow-xl border border-gray-700">
+            <div class="modal-header bg-gray-900 px-6 py-4 rounded-t-lg">
+                <h5 class="modal-title text-xl font-bold" id="editProjectModalLabel">Editar Projeto</h5>
+                <button type="button" class="btn-close text-white opacity-70 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="editProjectForm" method="post" class="space-y-4">
+                    <div>
+                        <label for="edit_nome_projeto" class="block text-gray-400 font-medium mb-1">Nome do Projeto</label>
+                        <input type="text" class="w-full p-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500" id="edit_nome_projeto" name="nome" required>
+                    </div>
+                    <div>
+                        <label for="edit_nota" class="block text-gray-400 font-medium mb-1">Nota</label>
+                        <input type="number" class="w-full p-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500" id="edit_nota" name="nota" step="0.01" min="0" max="10" required>
+                    </div>
+                    <button type="submit" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var editProjectModal = document.getElementById('editProjectModal');
+    editProjectModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var projetoId = button.getAttribute('data-bs-id');
+        var projetoNome = button.getAttribute('data-bs-nome');
+        var projetoNota = button.getAttribute('data-bs-nota');
+        
+        var modalTitle = editProjectModal.querySelector('.modal-title');
+        modalTitle.textContent = 'Editar Projeto: ' + projetoNome;
+        
+        var form = document.getElementById('editProjectForm');
+        form.action = '/student_detail/{{ aluno.id }}/edit_projeto/' + projetoId;
+        
+        document.getElementById('edit_nome_projeto').value = projetoNome;
+        document.getElementById('edit_nota').value = projetoNota;
+    });
+</script>
+{% endblock %}
